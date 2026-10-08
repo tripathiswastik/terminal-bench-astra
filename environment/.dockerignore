@@ -1,0 +1,8 @@
+tests
+solution
+.git
+*.zip
+__pycache__
+*.pyc
+.pytest_cache
+*.log

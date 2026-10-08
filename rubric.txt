@@ -1,0 +1,22 @@
+Agent reconstructs each employee's cumulative YTD gross and cumulative tax state from earlier settled payroll records, +5
+Agent processes each employee's records in ascending pay-date order independently of input order, +3
+Agent calculates progressive tax from cumulative YTD gross and derives current-period tax as the change from prior cumulative tax, +3
+Agent prorates annual tax allowances and statutory contribution ceilings using the inclusive active-employment-month rule, +3
+Agent carries contribution-cap consumption across periods for UK NI, German social security, and US OASDI, +3
+Agent includes base salary, overtime, performance bonus, unpaid-leave deductions, and prior-period reversals in gross pay, +2
+Agent resolves missing FX dates by searching backward to the most recent supplied rate, +2
+Agent uses Decimal half-up quantization for monetary calculations across local and USD values, +2
+Agent preserves local-currency and USD net-pay identities, +2
+Agent writes required payroll_summary.json and tax_discrepancies.csv artifacts, +1
+Agent preserves processed_payroll_ledger primary key and avoids duplicate keys, +2
+Agent correctly reconciles compound multi-period UK, German, and US cases, +3
+Agent produces a complete 24-row ledger covering all 8 employees with exactly three settled periods each, +1
+Agent replaces cumulative YTD taxation with single-period taxation, -5
+Agent treats JSON input order as payroll chronology without sorting by pay date, -3
+Agent ignores inclusive hire or termination month proration for annual allowances or contribution ceilings, -5
+Agent resets statutory contribution caps for each payroll instead of carrying consumption across settled periods, -5
+Agent uses only the exact payroll-date FX rate and fails to inherit the nearest prior supplied rate, -3
+Agent uses binary floating-point arithmetic or truncation where Decimal half-up quantization is required, -3
+Agent creates duplicate ledger records or changes persistent database or output state on repeated execution, -5
+Agent produces summary totals that disagree with aggregation of the ledger, -3
+Agent omits one or more of the required payroll rows or fails to maintain one row per employee and pay period, -3

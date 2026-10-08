@@ -1,0 +1,8 @@
+{
+  "total_records_processed": 24,
+  "reconciled_records": 24,
+  "total_gross_pay_usd": "682210.43",
+  "total_net_pay_usd": "488962.88",
+  "total_tax_withheld_usd": "126342.23",
+  "total_social_security_usd": "66905.32"
+}

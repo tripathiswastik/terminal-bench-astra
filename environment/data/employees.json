@@ -1,0 +1,74 @@
+[
+  {
+    "employee_id": "EMP-8042",
+    "name": "UK Payroll A",
+    "jurisdiction": "UK",
+    "currency": "GBP",
+    "hire_date": "2026-07-01",
+    "termination_date": null,
+    "annual_salary": 72000
+  },
+  {
+    "employee_id": "EMP-1102",
+    "name": "UK Payroll B",
+    "jurisdiction": "UK",
+    "currency": "GBP",
+    "hire_date": "2026-01-01",
+    "termination_date": null,
+    "annual_salary": 60000
+  },
+  {
+    "employee_id": "EMP-6620",
+    "name": "UK Payroll C",
+    "jurisdiction": "UK",
+    "currency": "GBP",
+    "hire_date": "2026-01-01",
+    "termination_date": "2026-10-15",
+    "annual_salary": 72000
+  },
+  {
+    "employee_id": "EMP-2197",
+    "name": "DE Payroll A",
+    "jurisdiction": "DE",
+    "currency": "EUR",
+    "hire_date": "2026-09-01",
+    "termination_date": null,
+    "annual_salary": 90000
+  },
+  {
+    "employee_id": "EMP-3304",
+    "name": "DE Payroll B",
+    "jurisdiction": "DE",
+    "currency": "EUR",
+    "hire_date": "2026-01-01",
+    "termination_date": null,
+    "annual_salary": 120000
+  },
+  {
+    "employee_id": "EMP-7744",
+    "name": "DE Payroll C",
+    "jurisdiction": "DE",
+    "currency": "EUR",
+    "hire_date": "2026-01-01",
+    "termination_date": null,
+    "annual_salary": 96000
+  },
+  {
+    "employee_id": "EMP-7311",
+    "name": "US Payroll A",
+    "jurisdiction": "US",
+    "currency": "USD",
+    "hire_date": "2026-01-01",
+    "termination_date": null,
+    "annual_salary": 186000
+  },
+  {
+    "employee_id": "EMP-5506",
+    "name": "US Payroll B",
+    "jurisdiction": "US",
+    "currency": "USD",
+    "hire_date": "2026-01-01",
+    "termination_date": null,
+    "annual_salary": 240000
+  }
+]

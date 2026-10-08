@@ -1,0 +1,30 @@
+artifacts = [
+  "/app/output/payroll_summary.json",
+  "/app/output/tax_discrepancies.csv",
+  "/app/data/payroll.db"
+]
+
+[metadata]
+author_name = "Swastik"
+author_email = "swastik.tripathi842@gmail.com"
+author_github = "tripathiswastik"
+author_organization = "BizTech Analytics"
+category = "Operations"
+subcategory = "financial-systems"
+tags = ["payroll", "tax-brackets", "multi-currency", "idempotency"]
+expert_time_estimate_hours = 4
+
+[verifier]
+timeout_sec = 600.0
+environment_mode = "separate"
+
+[agent]
+timeout_sec = 28800.0
+
+[environment]
+build_timeout_sec = 600.0
+cpus = 4
+memory_mb = 8192
+storage_mb = 10240
+gpus = 0
+network_mode = "public"
