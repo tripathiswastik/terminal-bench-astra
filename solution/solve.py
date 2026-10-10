@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import bisect
 import csv
 import json
 import sqlite3
 import os
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
@@ -49,21 +50,34 @@ def progressive(taxable: Decimal, bands: list[tuple[Decimal | None, Decimal]]) -
     return q(total)
 
 
-def load_fx() -> dict[str, dict[str, Decimal]]:
-    rates = {}
+def load_fx() -> tuple[dict[str, dict[str, Decimal]], list[str]]:
+    rates: dict[str, dict[str, Decimal]] = {}
     with (DATA / "fx_rates.csv").open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
             rates[row["date"]] = {"GBP": D(row["GBP_USD"]), "EUR": D(row["EUR_USD"])}
-    return rates
+    sorted_dates = sorted(rates.keys())
+    return rates, sorted_dates
 
 
-def fx_rate(pay_date: str, currency: str, rates: dict[str, dict[str, Decimal]]) -> Decimal:
+_FX_CACHE: dict[tuple[str, str], Decimal] = {}
+
+
+def fx_rate(pay_date: str, currency: str, rates: dict[str, dict[str, Decimal]], sorted_dates: list[str]) -> Decimal:
     if currency == "USD":
         return Decimal("1.0000")
-    current = date.fromisoformat(pay_date)
-    while current.isoformat() not in rates:
-        current -= timedelta(days=1)
-    return rates[current.isoformat()][currency]
+    cache_key = (pay_date, currency)
+    if cache_key in _FX_CACHE:
+        return _FX_CACHE[cache_key]
+    if pay_date in rates and currency in rates[pay_date]:
+        val = rates[pay_date][currency]
+        _FX_CACHE[cache_key] = val
+        return val
+    idx = bisect.bisect_right(sorted_dates, pay_date) - 1
+    if idx >= 0:
+        val = rates[sorted_dates[idx]][currency]
+        _FX_CACHE[cache_key] = val
+        return val
+    raise ValueError(f"No FX rate available on or before {pay_date}")
 
 
 def gross_for(record: dict) -> Decimal:
@@ -77,7 +91,7 @@ def gross_for(record: dict) -> Decimal:
     return q(gross)
 
 
-def calculate(record: dict, employee: dict, state: dict[str, Decimal], rates):
+def calculate(record: dict, employee: dict, state: dict[str, Decimal], rates: dict[str, dict[str, Decimal]], sorted_dates: list[str]):
     jurisdiction = employee["jurisdiction"]
     currency = employee["currency"]
     gross = gross_for(record)
@@ -128,7 +142,7 @@ def calculate(record: dict, employee: dict, state: dict[str, Decimal], rates):
         raise ValueError(f"Unsupported jurisdiction: {jurisdiction}")
 
     net = q(gross - tax - ss)
-    rate = fx_rate(record["pay_date"], currency, rates)
+    rate = fx_rate(record["pay_date"], currency, rates, sorted_dates)
     gross_usd = q(gross * rate)
     tax_usd = q(tax * rate)
     ss_usd = q(ss * rate)
@@ -143,7 +157,7 @@ def main() -> None:
         for e in json.loads((DATA / "employees.json").read_text(encoding="utf-8"))
     }
     runs = json.loads((DATA / "payroll_runs.json").read_text(encoding="utf-8"))
-    rates = load_fx()
+    rates, sorted_dates = load_fx()
 
     ordered = sorted(runs, key=lambda r: (r["employee_id"], r["pay_date"], r["pay_period"]))
     states = {employee_id: {"gross": ZERO, "tax": ZERO}
@@ -152,12 +166,24 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DATA / "payroll.db")
     try:
+        conn.execute("PRAGMA synchronous = NORMAL")
+        conn.execute("PRAGMA cache_size = -64000")
         cur = conn.cursor()
-        cur.execute("DELETE FROM processed_payroll_ledger")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_emp_period ON processed_payroll_ledger(employee_id, pay_period)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_emp_id ON processed_payroll_ledger(employee_id)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_pay_period ON processed_payroll_ledger(pay_period)")
 
+        # Selective purge using primary key index instead of full-table scan
+        records_to_purge = [(r["employee_id"], r["pay_period"]) for r in ordered]
+        cur.executemany(
+            "DELETE FROM processed_payroll_ledger WHERE employee_id = ? AND pay_period = ?",
+            records_to_purge,
+        )
+
+        rows_to_insert = []
         for record in ordered:
             employee = employees[record["employee_id"]]
-            values = calculate(record, employee, states[record["employee_id"]], rates)
+            values = calculate(record, employee, states[record["employee_id"]], rates, sorted_dates)
             gross, tax, ss, net, rate, gross_usd, tax_usd, ss_usd, net_usd = values
             state = states[record["employee_id"]]
             state["gross"] = q(state["gross"] + gross)
@@ -167,26 +193,27 @@ def main() -> None:
             gbp_values = (str(gross), str(tax), str(ss)) if currency == "GBP" else (None, None, None)
             eur_values = (str(gross), str(tax), str(ss)) if currency == "EUR" else (None, None, None)
 
-            cur.execute(
-                """
-                INSERT INTO processed_payroll_ledger (
-                    employee_id, pay_period, jurisdiction, currency,
-                    gross_pay_local, tax_withheld_local, social_security_local, net_pay_local,
-                    gross_pay_gbp, tax_withheld_gbp, social_security_gbp,
-                    gross_pay_eur, tax_withheld_eur, social_security_eur,
-                    gross_pay_usd, tax_withheld_usd, social_security_usd, net_pay_usd,
-                    fx_rate_used
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record["employee_id"], record["pay_period"], employee["jurisdiction"], currency,
-                    str(gross), str(tax), str(ss), str(net),
-                    *gbp_values, *eur_values,
-                    str(gross_usd), str(tax_usd), str(ss_usd), str(net_usd), str(rate),
-                ),
-            )
+            rows_to_insert.append((
+                record["employee_id"], record["pay_period"], employee["jurisdiction"], currency,
+                str(gross), str(tax), str(ss), str(net),
+                *gbp_values, *eur_values,
+                str(gross_usd), str(tax_usd), str(ss_usd), str(net_usd), str(rate),
+            ))
 
+        cur.executemany(
+            """
+            INSERT OR REPLACE INTO processed_payroll_ledger (
+                employee_id, pay_period, jurisdiction, currency,
+                gross_pay_local, tax_withheld_local, social_security_local, net_pay_local,
+                gross_pay_gbp, tax_withheld_gbp, social_security_gbp,
+                gross_pay_eur, tax_withheld_eur, social_security_eur,
+                gross_pay_usd, tax_withheld_usd, social_security_usd, net_pay_usd,
+                fx_rate_used
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            rows_to_insert,
+        )
         conn.commit()
         totals = cur.execute(
             """
