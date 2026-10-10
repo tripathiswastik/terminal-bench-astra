@@ -108,6 +108,25 @@ The reconciliation engine must produce the following deterministic artifacts:
 3. **`payroll.db`** (`/app/data/payroll.db`):
    Central SQLite table `processed_payroll_ledger` updated with all 24 reconciled rows.
 
+
+---
+
+## 🔍 Code-Level Defect Catalog (`environment/payroll/reconcile.py`)
+
+The starter script embodies nine concrete software defects that AI coding agents must diagnose, refactor, and resolve:
+
+| # | Concrete Code Defect | Flawed Implementation (`reconcile.py`) | Correct Engineering Implementation (`solution/solve.py`) |
+| :--- | :--- | :--- | :--- |
+| **1** | **Truncation vs Half-Up Rounding** | `value.quantize(CENT, rounding=ROUND_DOWN)` drops partial cents | `value.quantize(CENT, rounding=ROUND_HALF_UP)` enforces statutory rounding |
+| **2** | **Missing FX Backward Inheritance** | `rates.get(date, {}).get(cur, Decimal("1.0000"))` falls back to `1.0` | Calendar-day backward search traversing dates and year boundaries |
+| **3** | **Unstaged Precision & Drift** | Converts or computes without staged decimal quantization | Strict `Decimal` quantization across all seven distinct accounting stages |
+| **4** | **Absence of Stateful YTD State** | `calculate(record, employee, rates)` evaluates records in isolation | `calculate(record, employee, state, rates)` accumulating cumulative gross and withheld tax |
+| **5** | **Flawed Active-Month Proration** | `active_months()` returns flat `12` for non-2026 years | `max(0, end_month - start_month + 1)` bounded by hire, departure, and tax year |
+| **6** | **Unsorted FX Data Structure** | Loads CSV as an unsorted dictionary without chronological indexing | Chronologically sorted date structure with deterministic lookup |
+| **7** | **Non-Idempotent Ledger Deletion** | Unguarded table wipe without upsert or indexed conflict handling | Deterministic single transaction with primary key `(employee_id, pay_period)` integrity |
+| **8** | **No Database Transaction Safety** | Unguarded cursor execution without connection management | Structured `try...finally` wrapping with single atomic commit |
+| **9** | **Missing Explicit File Encoding** | Relies on OS-default encoding for file read/write | Enforces explicit `encoding="utf-8"` across all JSON and CSV I/O |
+
 ---
 
 ## 👤 Author & Organization
