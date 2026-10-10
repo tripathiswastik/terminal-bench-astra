@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import sqlite3
 from datetime import date
 from decimal import Decimal, ROUND_DOWN
 from pathlib import Path
 
-BASE = Path("/app")
+BASE = Path(os.environ.get("APP_DIR", "/app" if Path("/app").exists() else Path(__file__).resolve().parent.parent))
 DATA = BASE / "data"
 OUT = BASE / "output"
 CENT = Decimal("0.01")
@@ -19,6 +20,8 @@ def D(value):
 
 
 def q(value):
+    if not isinstance(value, Decimal):
+        value = Decimal(str(value))
     return value.quantize(CENT, rounding=ROUND_DOWN)
 
 

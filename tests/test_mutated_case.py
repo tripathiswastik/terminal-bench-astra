@@ -15,7 +15,7 @@ BASE = Path(__file__).resolve().parent.parent
 APP_DIR = BASE / "environment"
 DATA = APP_DIR / "data"
 OUT = APP_DIR / "output"
-RECONCILE = APP_DIR / "payroll" / "reconcile_buggy.py"
+RECONCILE = APP_DIR / "payroll" / "reconcile.py"
 
 
 def run_reconcile(custom_app_dir: Path | None = None):
@@ -139,7 +139,7 @@ def test_duplicate_key_is_ignored():
 
 
 if __name__ == "__main__":
-    print("Running mutated test suite against reconcile_buggy.py...")
+    print("Running mutated test suite against reconcile.py...")
     test_mutated_case_challenges_agent()
     print("  [PASS] test_mutated_case_challenges_agent")
     test_negative_reversal_is_clamped()
