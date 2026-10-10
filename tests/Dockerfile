@@ -7,3 +7,4 @@ COPY requirements.txt /tests/requirements.txt
 RUN pip install --no-cache-dir --require-hashes -r /tests/requirements.txt
 WORKDIR /tests
 COPY . /tests/
+RUN chmod +x /tests/test.sh
