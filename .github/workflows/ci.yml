@@ -31,7 +31,7 @@ jobs:
 
     - name: Type check with mypy
       run: |
-        mypy solution/solve.py tests/test_outputs.py
+        mypy solution/solve.py tests/test_outputs.py tests/test_mutated_case.py build_release.py
 
     - name: Execute reference solution
       run: |
@@ -40,3 +40,4 @@ jobs:
     - name: Run verification test suite
       run: |
         pytest tests/test_outputs.py -v
+        pytest tests/test_mutated_case.py -v
