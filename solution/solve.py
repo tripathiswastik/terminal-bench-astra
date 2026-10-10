@@ -3,11 +3,12 @@ from __future__ import annotations
 import csv
 import json
 import sqlite3
+import os
 from datetime import date, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
-BASE = Path("/app")
+BASE = Path(os.environ.get("APP_DIR", "/app" if Path("/app").exists() else Path(__file__).resolve().parent.parent / "environment"))
 DATA = BASE / "data"
 OUT = BASE / "output"
 CENT = Decimal("0.01")

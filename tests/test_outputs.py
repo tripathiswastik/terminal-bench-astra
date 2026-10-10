@@ -1,14 +1,17 @@
 import csv
 import json
+import os
 import sqlite3
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
-SUMMARY = Path("/app/output/payroll_summary.json")
-CSV_OUT = Path("/app/output/tax_discrepancies.csv")
-DB = Path("/app/data/payroll.db")
-EXPECTED_SUMMARY = Path("/tests/expected_payroll_summary.json")
-EXPECTED_LEDGER = Path("/tests/expected_payroll_ledger.json")
+BASE = Path(os.environ.get("APP_DIR", "/app" if Path("/app").exists() else Path(__file__).resolve().parent.parent / "environment"))
+TESTS_DIR = Path(os.environ.get("TESTS_DIR", "/tests" if Path("/tests").exists() else Path(__file__).resolve().parent))
+SUMMARY = BASE / "output" / "payroll_summary.json"
+CSV_OUT = BASE / "output" / "tax_discrepancies.csv"
+DB = BASE / "data" / "payroll.db"
+EXPECTED_SUMMARY = TESTS_DIR / "expected_payroll_summary.json"
+EXPECTED_LEDGER = TESTS_DIR / "expected_payroll_ledger.json"
 Q = Decimal("0.01")
 KEYS = [
     "employee_id", "pay_period", "jurisdiction", "currency",
@@ -154,3 +157,12 @@ def test_each_employee_has_three_settled_periods():
     con.close()
     assert len(counts) == 8
     assert all(count == 3 for _, count in counts)
+
+
+if __name__ == "__main__":
+    test_functions = [f for name, f in sorted(globals().items()) if name.startswith("test_") and callable(f)]
+    for fn in test_functions:
+        print(f"  [RUN] {fn.__name__}...")
+        fn()
+        print(f"  [PASS] {fn.__name__}")
+    print("\nAll verifier tests passed successfully (24/24 records reconciled)!")
