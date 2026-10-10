@@ -3,11 +3,12 @@ from __future__ import annotations
 import csv
 import json
 import sqlite3
-from datetime import date, timedelta
+import os
+from datetime import date
 from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
 from pathlib import Path
 
-BASE = Path("/app")
+BASE = Path(os.environ.get("APP_DIR", "/app" if Path("/app").exists() else Path(__file__).resolve().parent.parent))
 DATA = BASE / "data"
 OUT = BASE / "output"
 CENT = Decimal("0.01")
@@ -26,6 +27,8 @@ def q(value, use_half_up=False):
     """Quantize with inconsistent rounding mode.
     Switches between ROUND_DOWN and ROUND_HALF_UP based on random conditions."""
     rounding = ROUND_HALF_UP if use_half_up else ROUND_DOWN
+    if not isinstance(value, Decimal):
+        value = Decimal(str(value))
     return value.quantize(CENT, rounding=rounding)
 
 
@@ -89,7 +92,7 @@ def calculate(record, employee, rates):
 
     # BUG: No prorated factor; always uses 1
     factor = Decimal("1")
-    
+
     if jurisdiction == "UK":
         allowance = q(D("37700") * factor)
         # BUG: Calculates tax on gross only, ignores YTD and prior tax
@@ -97,7 +100,7 @@ def calculate(record, employee, rates):
         cap = q(D("50270") * factor)
         # BUG: Resets cap consumption per period instead of carry-forward
         ss = q(max(ZERO, min(gross, cap)) * D("0.08"))
-        
+
     elif jurisdiction == "DE":
         allowance = q(D("12000") * factor)
         # BUG: Single-period tax, no YTD reconstruction
@@ -105,7 +108,7 @@ def calculate(record, employee, rates):
         cap = q(D("80000") * factor)
         # BUG: Cap resets per period
         ss = q(max(ZERO, min(gross, cap)) * D("0.19375"))
-        
+
     elif jurisdiction == "US":
         allowance = q(D("10000") * factor)
         # BUG: No cumulative tax calculation
@@ -121,16 +124,16 @@ def calculate(record, employee, rates):
 
     # BUG: Negative tax clamped to zero (forbidden by benchmark)
     tax = max(ZERO, tax)
-    
+
     net = q(gross - tax - ss)
     rate = get_fx_rate(record["pay_date"], currency, rates)
-    
+
     # BUG: Uses floating-point intermediate (implicit type coercion)
     gross_usd = q(float(gross) * float(rate))
     tax_usd = q(float(tax) * float(rate))
     ss_usd = q(float(ss) * float(rate))
     net_usd = q(gross_usd - tax_usd - ss_usd)
-    
+
     return gross, tax, ss, net, rate, gross_usd, tax_usd, ss_usd, net_usd
 
 
@@ -143,7 +146,7 @@ def main():
     conn = sqlite3.connect(DATA / "payroll.db")
     cur = conn.cursor()
     cur.execute("DELETE FROM processed_payroll_ledger")
-    
+
     # BUG: Does not sort by employee and pay_date; processes in input order
     for record in runs:
         employee = employees[record["employee_id"]]
@@ -152,7 +155,7 @@ def main():
         currency = employee["currency"]
         gbp = (str(gross), str(tax), str(ss)) if currency == "GBP" else (None, None, None)
         eur = (str(gross), str(tax), str(ss)) if currency == "EUR" else (None, None, None)
-        
+
         # BUG: No duplicate key check; will create duplicates if rerun
         cur.execute(
             """INSERT INTO processed_payroll_ledger(
@@ -168,9 +171,9 @@ def main():
                 *gbp, *eur, str(gross_usd), str(tax_usd), str(ss_usd), str(net_usd), str(rate),
             ),
         )
-    
+
     conn.commit()
-    
+
     # BUG: Calculates totals from database, not from what was inserted
     # If previous run left data, totals will be wrong
     totals = cur.execute(
@@ -190,7 +193,7 @@ def main():
         "total_social_security_usd": str(q(D(totals[4]))),
     }
     (OUT / "payroll_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
-    
+
     # BUG: CSV header written but no rows (tax_discrepancies intentionally empty)
     with (OUT / "tax_discrepancies.csv").open("w", newline="") as handle:
         csv.writer(handle).writerow(
