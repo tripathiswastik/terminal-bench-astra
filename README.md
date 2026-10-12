@@ -152,3 +152,10 @@ The starter script embodies nine concrete software defects that AI coding agents
 - **Author:** [Swastik Tripathi](https://github.com/tripathiswastik)
 - **Organization:** BizTech Analytics
 - **Benchmark Suite:** Terminal-Bench / Astra Evaluator
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
