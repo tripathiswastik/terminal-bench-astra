@@ -1,3 +1,9 @@
+"""
+Python Version: 3.11+ (Target: Python 3.11-slim-bookworm, SQLite3, Decimal)
+Purpose: Verifier evaluation test suite checking multi-region payroll reconciliation, tax bands, and ACID ledger integrity.
+Runs-in: Isolated verifier container (/tests) under Terminal-Bench separate environment mode.
+"""
+
 import csv
 import json
 import os

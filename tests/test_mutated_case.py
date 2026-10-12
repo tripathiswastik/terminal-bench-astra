@@ -1,3 +1,8 @@
+"""
+Python Version: 3.11+ (Target: Python 3.11-slim-bookworm, SQLite3, Decimal)
+Purpose: Mutated stress tests and edge cases (sandbox isolation, FX rate gaps, rounding bounds) for payroll reconciliation.
+Runs-in: Isolated verifier container (/tests) under Terminal-Bench separate environment mode.
+"""
 from __future__ import annotations
 
 import csv

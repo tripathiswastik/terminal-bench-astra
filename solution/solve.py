@@ -1,3 +1,8 @@
+"""
+Python Version: 3.11+ (Target: Python 3.11-slim-bookworm, SQLite3, Decimal)
+Purpose: Canonical reference solution engine for multi-region payroll reconciliation benchmark.
+Runs-in: Host evaluation environment or container sandbox (/app) deployed via solve.sh.
+"""
 from __future__ import annotations
 
 import csv

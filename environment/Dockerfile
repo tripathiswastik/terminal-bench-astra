@@ -1,3 +1,6 @@
+# Python Version: 3.11 (python:3.11-slim-bookworm@sha256:528257d48c1da0dcecc2e725d1ae34498d60c965f1241e39cd6a85a8859bdf84)
+# Purpose: Execution runtime sandbox for candidate agent solving the multi-region payroll reconciliation challenge.
+# Runs-in: Agent execution container (/app) under Terminal-Bench separate environment mode.
 FROM python:3.11-slim-bookworm@sha256:528257d48c1da0dcecc2e725d1ae34498d60c965f1241e39cd6a85a8859bdf84
 
 WORKDIR /app
