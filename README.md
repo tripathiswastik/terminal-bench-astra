@@ -159,3 +159,10 @@ The starter script embodies nine concrete software defects that AI coding agents
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+
+
+---
+
+## 🏷️ Repository Metadata & Topic Tags
+- **Core Topics**: `benchmark` `code-repair` `testing-harness` `agentic-sdlc` `terminal-bench` `python` `docker`
+- **Governance**: Follows [Antigravity AI Rules](file:///d:/ag-ai/.agents/rules/antigravity-rules.md) and [Multi-Agent SDLC Contracts](file:///d:/ag-ai/.agents/rules/multi-agent-prompts.md).
