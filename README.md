@@ -39,7 +39,7 @@ Evaluation pass rates and execution metrics across leading foundation models and
 ## 🏗️ Repository Architecture
 
 ```text
-.
+terminal-bench-astra/
 ├── task.toml                  # Benchmark task specification, timeouts, and resource quotas
 ├── instruction.md             # Candidate prompt / instructions given to the agent
 ├── rubric.txt                 # Detailed scoring rubric (+32 positive, -30 penalty points)
