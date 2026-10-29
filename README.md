@@ -21,6 +21,46 @@ To achieve a passing evaluation, the AI agent must reconstruct historical YTD st
 
 ---
 
+## 📐 Benchmark Evaluation Flow & Architecture
+
+```mermaid
+flowchart TD
+    subgraph Input["Benchmark Fixtures & Ground Truth"]
+        A["Non-Chronological Shuffled Runs<br/>(payroll_runs.json)"]
+        B["Employee Records (US / UK / DE)<br/>(employees.json)"]
+        C["Sparse FX Matrix with Gaps<br/>(fx_rates.csv)"]
+        D["Statutory Tax Rules<br/>(tax_schedules.md)"]
+    end
+
+    subgraph Agent["Autonomous Code-Repair Sandbox (/app/payroll)"]
+        E["Bugged Starter Script<br/>(reconcile.py)"]
+        F["LLM Agent / Code-Repair Patch"]
+        G["Stateful Reconstruction Engine<br/>• Chronological Sorting<br/>• Backward FX Inheritance<br/>• Cumulative Progressive Tax<br/>• Decimal Cent Quantization"]
+        E --> F --> G
+    end
+
+    subgraph Ledger["Transactional Storage"]
+        H[("SQLite ACID Ledger<br/>(payroll.db)")]
+        G --> H
+    end
+
+    subgraph Evaluation["Verification Harness (tests/)"]
+        I["Ledger Invariant Verifier<br/>(test_outputs.py)"]
+        J["Summary Discrepancy Checker<br/>(payroll_summary.json)"]
+        K{"Cent-Level Numerical Parity &<br/>Execution Budget (<= 45s)"}
+        H --> I
+        G --> J
+        I --> K
+        J --> K
+        K -->|Pass| L["Scoring: 32/32 pts (Pass@1)"]
+        K -->|Fail| M["Penalty Scored Breakdown"]
+    end
+
+    Input --> Agent
+```
+
+---
+
 ## 📊 Model Evaluation Results
 
 Evaluation pass rates and execution metrics across leading foundation models and autonomous coding agents on the Terminal-Bench Astra payroll challenge:
@@ -102,6 +142,15 @@ The test verifier runs in an isolated container and validates exact cent-level a
 ```bash
 cd tests
 pytest test_outputs.py -v
+```
+
+### 3. Run Verification in Isolated Docker Container
+```bash
+# Build evaluation verifier container
+docker build -t terminal-bench-astra-verifier -f tests/Dockerfile .
+
+# Execute isolated verifier
+docker run --rm terminal-bench-astra-verifier
 ```
 
 ---
