@@ -213,5 +213,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 🏷️ Repository Metadata & Topic Tags
-- **Core Topics**: `benchmark` `code-repair` `testing-harness` `agentic-sdlc` `terminal-bench` `python` `docker`
+- **About Description**: AI code-repair benchmark evaluating autonomous coding agents on multi-region statutory payroll rules, progressive taxation, and SQLite ACID ledger integrity.
+- **Core Topics**: `benchmark` `code-repair` `testing-harness` `agentic-sdlc` `terminal-bench` `payroll-systems` `sqlite` `python` `docker`
 - **Governance**: Follows [Antigravity AI Rules](file:///d:/ag-ai/.agents/rules/antigravity-rules.md) and [Multi-Agent SDLC Contracts](file:///d:/ag-ai/.agents/rules/multi-agent-prompts.md).
